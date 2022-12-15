@@ -7,13 +7,35 @@ const app = express();
 app.use(express.json());
 
 const HTTP_OK_STATUS = 200;
-const HTTP_ERROR_STATUS = 404;
+const HTTP_ERR404_STATUS = 404;
+const HTTP_ERR400_STATUS = 400;
 const PORT = '3000';
 const myKey = () => crypto.randomBytes(8).toString('hex');
 
 const readFile = async () => {
   const data = await fs.readFile(path.resolve(__dirname, './talker.json'));
   return JSON.parse(data);
+};
+
+const validate = (request, response, next) => {
+  const { email, password } = request.body;
+  const emailIsValid = /\S+@\S+\.\S+/;
+
+if (!email) { 
+  return response.status(HTTP_ERR400_STATUS).send({ message: 'O campo "email" é obrigatório' });
+}
+if (!emailIsValid.test(email)) { 
+  return response.status(HTTP_ERR400_STATUS).send({
+    message: 'O "email" deve ter o formato "email@email.com"' });
+}
+if (!password) { 
+  return response.status(HTTP_ERR400_STATUS).send({ message: 'O campo "password" é obrigatório' });
+}
+if (password.length < 6) { 
+  return response.status(HTTP_ERR400_STATUS).send({
+    message: 'O "password" deve ter pelo menos 6 caracteres' });
+}
+next();
 };
 
 // não remova esse endpoint, e para o avaliador funcionar!
@@ -33,10 +55,10 @@ app.get('/talker/:id', async (request, response) => {
   if (filterId) {
   return response.status(HTTP_OK_STATUS).send(filterId);
   } 
-  return response.status(HTTP_ERROR_STATUS).send({ message: 'Pessoa palestrante não encontrada' });
+  return response.status(HTTP_ERR404_STATUS).send({ message: 'Pessoa palestrante não encontrada' });
 });
 
-app.post('/login', async (_request, response) => {
+app.post('/login', validate, async (_request, response) => {
   const token = myKey();
   return response.status(HTTP_OK_STATUS).send({ token });
 });
