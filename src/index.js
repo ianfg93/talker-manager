@@ -2,6 +2,8 @@ const express = require('express');
 const path = require('path');
 const fs = require('fs').promises;
 const crypto = require('crypto');
+const { authoriza, nameValid, ageValid, watchedAtValid,
+  rateValid, talkValid } = require('./middlewares/validate');
 
 const app = express();
 app.use(express.json());
@@ -61,6 +63,12 @@ app.get('/talker/:id', async (request, response) => {
 app.post('/login', validate, async (_request, response) => {
   const token = myKey();
   return response.status(HTTP_OK_STATUS).send({ token });
+});
+
+app.post('/talker', authoriza, nameValid, ageValid, watchedAtValid,
+rateValid, talkValid, async (_request, response) => {
+  
+  return response.status(HTTP_OK_STATUS).send();
 });
 
 app.listen(PORT, () => {
