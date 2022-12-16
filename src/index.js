@@ -9,6 +9,7 @@ const app = express();
 app.use(express.json());
 
 const HTTP_OK_STATUS = 200;
+const HTTP_OK201_STATUS = 201;
 const HTTP_ERR404_STATUS = 404;
 const HTTP_ERR400_STATUS = 400;
 const PORT = '3000';
@@ -66,9 +67,13 @@ app.post('/login', validate, async (_request, response) => {
 });
 
 app.post('/talker', authoriza, nameValid, ageValid, watchedAtValid,
-rateValid, talkValid, async (_request, response) => {
-  
-  return response.status(HTTP_OK_STATUS).send();
+rateValid, talkValid, async (request, response) => {
+  const { name, age, talk } = request.body;
+  const data = await fs.readFile(path.resolve(__dirname, './talker.json'));
+  const talker = { id: data.length + 1, name, age, talk };
+  data.push(talker);
+  fs.writeFile('src/talker.json', data);
+  return response.status(HTTP_OK201_STATUS).send(talker);
 });
 
 app.listen(PORT, () => {
