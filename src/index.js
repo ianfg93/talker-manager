@@ -1,9 +1,9 @@
 const express = require('express');
-const path = require('path');
+// const path = require('path');
 const fs = require('fs').promises;
 const crypto = require('crypto');
-const { authoriza, nameValid, ageValid, watchedAtValid,
-  rateValid, talkValid } = require('./middlewares/validate');
+const { authoriza, nameValid, ageValid, talkValid,
+  rateValid } = require('./middlewares/validate');
 
 const app = express();
 app.use(express.json());
@@ -16,10 +16,14 @@ const PORT = '3000';
 const myKey = () => crypto.randomBytes(8).toString('hex');
 
 const readFile = async () => {
-  const data = await fs.readFile(path.resolve(__dirname, './talker.json'));
-  return JSON.parse(data);
+  const response = await fs.readFile('./src/talker.json');
+  const data = await fs.readFile(response);
+  return data;
 };
 
+const writeFile = async (content) => {
+  await fs.writeFile('./src/talker.json', JSON.stringify(content));
+};
 const validate = (request, response, next) => {
   const { email, password } = request.body;
   const emailIsValid = /\S+@\S+\.\S+/;
@@ -66,13 +70,13 @@ app.post('/login', validate, async (_request, response) => {
   return response.status(HTTP_OK_STATUS).send({ token });
 });
 
-app.post('/talker', authoriza, nameValid, ageValid, watchedAtValid,
-rateValid, talkValid, async (request, response) => {
+app.post('/talker', authoriza, nameValid, ageValid,
+talkValid, rateValid, async (request, response) => {
   const { name, age, talk } = request.body;
-  const data = await fs.readFile(path.resolve(__dirname, './talker.json'));
+  const data = await readFile();
   const talker = { id: data.length + 1, name, age, talk };
   data.push(talker);
-  fs.writeFile('src/talker.json', data);
+  await writeFile(data);
   return response.status(HTTP_OK201_STATUS).send(talker);
 });
 
