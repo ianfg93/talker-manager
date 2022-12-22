@@ -1,5 +1,5 @@
 const express = require('express');
-// const path = require('path');
+const path = require('path');
 const fs = require('fs').promises;
 const crypto = require('crypto');
 const { authoriza, nameValid, ageValid, talkValid,
@@ -16,9 +16,8 @@ const PORT = '3000';
 const myKey = () => crypto.randomBytes(8).toString('hex');
 
 const readFile = async () => {
-  const response = await fs.readFile('./src/talker.json');
-  const data = await fs.readFile(response);
-  return data;
+  const data = await fs.readFile(path.resolve(__dirname, './talker.json'));
+  return JSON.parse(data);
 };
 
 const writeFile = async (content) => {
