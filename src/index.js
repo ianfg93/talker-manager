@@ -8,10 +8,6 @@ const { authoriza, nameValid, ageValid, talkValid,
 const app = express();
 app.use(express.json());
 
-const HTTP_OK_STATUS = 200;
-const HTTP_OK201_STATUS = 201;
-const HTTP_ERR404_STATUS = 404;
-const HTTP_ERR400_STATUS = 400;
 const PORT = '3000';
 const myKey = () => crypto.randomBytes(8).toString('hex');
 
@@ -28,17 +24,17 @@ const validate = (request, response, next) => {
   const emailIsValid = /\S+@\S+\.\S+/;
 
 if (!email) { 
-  return response.status(HTTP_ERR400_STATUS).send({ message: 'O campo "email" é obrigatório' });
+  return response.status(400).send({ message: 'O campo "email" é obrigatório' });
 }
 if (!emailIsValid.test(email)) { 
-  return response.status(HTTP_ERR400_STATUS).send({
+  return response.status(400).send({
     message: 'O "email" deve ter o formato "email@email.com"' });
 }
 if (!password) { 
-  return response.status(HTTP_ERR400_STATUS).send({ message: 'O campo "password" é obrigatório' });
+  return response.status(400).send({ message: 'O campo "password" é obrigatório' });
 }
 if (password.length < 6) { 
-  return response.status(HTTP_ERR400_STATUS).send({
+  return response.status(400).send({
     message: 'O "password" deve ter pelo menos 6 caracteres' });
 }
 next();
@@ -46,12 +42,12 @@ next();
 
 // não remova esse endpoint, e para o avaliador funcionar!
 app.get('/', (_request, response) => {
-  response.status(HTTP_OK_STATUS).send();
+  response.status(200).send();
 });
 
 app.get('/talker', async (_request, response) => {
   const data = await readFile();
-  return response.status(HTTP_OK_STATUS).send(data);
+  return response.status(200).send(data);
 });
 
 app.get('/talker/:id', async (request, response) => {
@@ -59,14 +55,14 @@ app.get('/talker/:id', async (request, response) => {
   const { id } = request.params;
   const filterId = data.find((palestrante) => palestrante.id === Number(id));
   if (filterId) {
-  return response.status(HTTP_OK_STATUS).send(filterId);
+  return response.status(200).send(filterId);
   } 
-  return response.status(HTTP_ERR404_STATUS).send({ message: 'Pessoa palestrante não encontrada' });
+  return response.status(404).send({ message: 'Pessoa palestrante não encontrada' });
 });
 
 app.post('/login', validate, async (_request, response) => {
   const token = myKey();
-  return response.status(HTTP_OK_STATUS).send({ token });
+  return response.status(200).send({ token });
 });
 
 app.post('/talker', authoriza, nameValid, ageValid,
@@ -76,7 +72,7 @@ talkValid, rateValid, async (request, response) => {
   const talker = { id: data.length + 1, name, age, talk };
   data.push(talker);
   await writeFile(data);
-  return response.status(HTTP_OK201_STATUS).send(talker);
+  return response.status(201).send(talker);
 });
 
 app.put('/talker/:id', authoriza, nameValid, ageValid,
@@ -87,7 +83,16 @@ talkValid, rateValid, async (request, response) => {
     const talker = data.findIndex((talkers) => talkers.id === Number(id));
     data[talker] = { ...data[talker], name, age, talk };
     await writeFile(data);
-    return response.status(HTTP_OK_STATUS).send(data[talker]);
+    return response.status(200).send(data[talker]);
+});
+
+app.delete('/talker/:id', authoriza, async (request, response) => {
+  const data = await readFile();
+  const { id } = request.params;
+  const talker = data.findIndex((talkers) => talkers.id === Number(id));
+  data.splice(talker, 1);
+  await writeFile(data);
+  return response.status(204).end();
 });
 
 app.listen(PORT, () => {
