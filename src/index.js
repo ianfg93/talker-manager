@@ -1,15 +1,15 @@
 const express = require('express');
 const path = require('path');
 const fs = require('fs').promises;
-const crypto = require('crypto');
+
 const { authoriza, nameValid, ageValid, talkValid,
   rateValid } = require('./middlewares/validate');
+const { validate, myKey } = require('./middlewares/login');
 
 const app = express();
 app.use(express.json());
 
 const PORT = '3000';
-const myKey = () => crypto.randomBytes(8).toString('hex');
 
 const readFile = async () => {
   const data = await fs.readFile(path.resolve(__dirname, './talker.json'));
@@ -18,26 +18,6 @@ const readFile = async () => {
 
 const writeFile = async (content) => {
   await fs.writeFile('./src/talker.json', JSON.stringify(content));
-};
-const validate = (request, response, next) => {
-  const { email, password } = request.body;
-  const emailIsValid = /\S+@\S+\.\S+/;
-
-if (!email) { 
-  return response.status(400).send({ message: 'O campo "email" é obrigatório' });
-}
-if (!emailIsValid.test(email)) { 
-  return response.status(400).send({
-    message: 'O "email" deve ter o formato "email@email.com"' });
-}
-if (!password) { 
-  return response.status(400).send({ message: 'O campo "password" é obrigatório' });
-}
-if (password.length < 6) { 
-  return response.status(400).send({
-    message: 'O "password" deve ter pelo menos 6 caracteres' });
-}
-next();
 };
 
 // não remova esse endpoint, e para o avaliador funcionar!
