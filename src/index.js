@@ -79,6 +79,17 @@ talkValid, rateValid, async (request, response) => {
   return response.status(HTTP_OK201_STATUS).send(talker);
 });
 
+app.put('/talker/:id', authoriza, nameValid, ageValid,
+talkValid, rateValid, async (request, response) => {
+    const { name, age, talk } = request.body;
+    const data = await readFile();
+    const { id } = request.params;
+    const talker = data.findIndex((talkers) => talkers.id === Number(id));
+    data[talker] = { ...data[talker], name, age, talk };
+    await writeFile(data);
+    return response.status(HTTP_OK_STATUS).send(data[talker]);
+});
+
 app.listen(PORT, () => {
   console.log('Online');
 });
